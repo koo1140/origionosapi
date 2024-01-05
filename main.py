@@ -1,30 +1,23 @@
-from transformers import DistilBertTokenizer, DistilBertForQuestionAnswering
-import torch
+from transformers import BertForMaskedLM, BertTokenizer
 
-# Load pre-trained DistilBERT model and tokenizer
-model_name = "distilbert-base-cased-distilled-squad"
-tokenizer = DistilBertTokenizer.from_pretrained(model_name)
-model = DistilBertForQuestionAnswering.from_pretrained(model_name)
+# Load pre-trained BERT model and tokenizer
+model_name = "bert-base-uncased"
+tokenizer = BertTokenizer.from_pretrained(model_name)
+model = BertForMaskedLM.from_pretrained(model_name)
 
-# Function to perform question answering
-def answer_question(question, context):
-    inputs = tokenizer(question, context, return_tensors="pt")
-    outputs = model(**inputs)
+# Function to generate text using masked language modeling
+def generate_text(prompt):
+    input_ids = tokenizer.encode(prompt, return_tensors="pt")
+    mask_token_index = input_ids[0].tolist().index(tokenizer.mask_token_id)
     
-    # Get the predicted start and end positions
-    start_logits = outputs.start_logits
-    end_logits = outputs.end_logits
+    outputs = model(input_ids)
+    predictions = outputs.logits[0, mask_token_index].topk(5).indices
 
-    # Get the most likely answer
-    start_index = torch.argmax(start_logits, dim=1).item()
-    end_index = torch.argmax(end_logits, dim=1).item()
-
-    answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(inputs["input_ids"][0][start_index:end_index + 1]))
-    return answer
+    generated_text = [tokenizer.decode(input_ids[0].tolist()[:mask_token_index] + [pred] + input_ids[0].tolist()[mask_token_index + 1:]) for pred in predictions]
+    return generated_text
 
 # Example usage
-context = "DistilBERT is a smaller version of BERT, designed to be more memory-efficient."
-question = "What is DistilBERT?"
-
-answer = answer_question(question, context)
-print("Answer:", answer)
+prompt = "I enjoy working with"
+generated_texts = generate_text(prompt)
+for text in generated_texts:
+    print("Generated Text:", text)
