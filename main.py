@@ -1,16 +1,30 @@
-from flask import Flask, render_template, request, jsonify
+from transformers import DistilBertTokenizer, DistilBertForQuestionAnswering
+import torch
 
-app = Flask(__name__)
+# Load pre-trained DistilBERT model and tokenizer
+model_name = "distilbert-base-cased-distilled-squad"
+tokenizer = DistilBertTokenizer.from_pretrained(model_name)
+model = DistilBertForQuestionAnswering.from_pretrained(model_name)
 
+# Function to perform question answering
+def answer_question(question, context):
+    inputs = tokenizer(question, context, return_tensors="pt")
+    outputs = model(**inputs)
+    
+    # Get the predicted start and end positions
+    start_logits = outputs.start_logits
+    end_logits = outputs.end_logits
 
-@app.route('/')
-def home():
-    return "test"
+    # Get the most likely answer
+    start_index = torch.argmax(start_logits, dim=1).item()
+    end_index = torch.argmax(end_logits, dim=1).item()
 
-@app.route('/ai', methods=['GET'])
-def AI_endpoint():
-    response = "hi"
-    return jsonify({'response': response})
+    answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(inputs["input_ids"][0][start_index:end_index + 1]))
+    return answer
 
-def start():
-    app.run(debug=True, port=5000, host='0.0.0.0')
+# Example usage
+context = "DistilBERT is a smaller version of BERT, designed to be more memory-efficient."
+question = "What is DistilBERT?"
+
+answer = answer_question(question, context)
+print("Answer:", answer)
