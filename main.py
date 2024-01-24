@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
 from gradio_client import Client
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/qa')
 def question():
@@ -10,12 +12,12 @@ def question():
 
     client = Client("https://wop-originosai.hf.space/")
     result = client.predict(
-				question_param,
-				0.9,
-				2048,
-				0.9,
-				1.2,
-				api_name="/chat"
+        question_param,
+        0.9,
+        2048,
+        0.9,
+        1.2,
+        api_name="/chat"
     )
     print(result)
 
