@@ -20,7 +20,7 @@ def qa_predict():
         # Perform QA model prediction
         answer = qa_model_predict(question)
 
-        return jsonify({'answer': answer})
+        return answer
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
