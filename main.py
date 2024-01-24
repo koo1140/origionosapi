@@ -8,7 +8,7 @@ def qa_model_predict(question):
     # This is just a placeholder response
     return f"Dummy answer to the question: '{question}'."
 
-@app.route('/qa')
+@app.route('/qa', methods=['GET'])
 def qa_predict():
     try:
         # Assume the input is a JSON object with a 'question'
